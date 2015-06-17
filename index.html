@@ -1,9 +1,754 @@
-<!DOCTYPE html>
-<head>
-  <title>React Prism | tomchentw</title>
-</head>
-<body>
-  <div id="react-root"></div>
-  <script type="text/javascript" src="prism.min.js"></script>
-  <script type="text/javascript" src="assets/90f1af500162b0aada1a.js" async></script>
-</body>
+<!DOCTYPE html><html><head><title>React Prism | tomchentw</title><link rel="stylesheet" href="assets/3bf519acf6199ac76f22/client.css"><script type="text/javascript" src="prism.min.js"></script></head><body><div id="react-container"><div class="container-fluid container--full-height" data-reactid=".lmns13nu9s" data-react-checksum="1414977894"><div class="github-fork-ribbon-wrapper right" data-reactid=".lmns13nu9s.0"><div class="github-fork-ribbon" style="background-color:#333;" data-reactid=".lmns13nu9s.0.0"><a href="https://github.com/tomchentw/react-prism" data-reactid=".lmns13nu9s.0.0.0">Fork me on GitHub</a></div></div><div class="row row--full-height" data-reactid=".lmns13nu9s.1"><div class="col-xs-6" data-reactid=".lmns13nu9s.1.0"><h2 data-reactid=".lmns13nu9s.1.0.0"><span data-reactid=".lmns13nu9s.1.0.0.0">Demo of SelfUpdatedCode</span><br data-reactid=".lmns13nu9s.1.0.0.1"><small data-reactid=".lmns13nu9s.1.0.0.2"><span data-reactid=".lmns13nu9s.1.0.0.2.0">update every </span><span data-reactid=".lmns13nu9s.1.0.0.2.2"> seconds</span></small></h2><pre data-reactid=".lmns13nu9s.1.0.1">
+<code class="language-javascript" data-reactid=".lmns13nu9s.1.0.1.0">
+/* **********************************************
+     Begin prism-core.js
+********************************************** */
+
+self = (typeof window !== &#x27;undefined&#x27;)
+	? window   // if in browser
+	: (
+		(typeof WorkerGlobalScope !== &#x27;undefined&#x27; &amp;&amp; self instanceof WorkerGlobalScope)
+		? self // if in worker
+		: {}   // if in node js
+	);
+
+/**
+ * Prism: Lightweight, robust, elegant syntax highlighting
+ * MIT license http://www.opensource.org/licenses/mit-license.php/
+ * @author Lea Verou http://lea.verou.me
+ */
+
+var Prism = (function(){
+
+// Private helper vars
+var lang = /\blang(?:uage)?-(?!\*)(\w+)\b/i;
+
+var _ = self.Prism = {
+	util: {
+		encode: function (tokens) {
+			if (tokens instanceof Token) {
+				return new Token(tokens.type, _.util.encode(tokens.content), tokens.alias);
+			} else if (_.util.type(tokens) === &#x27;Array&#x27;) {
+				return tokens.map(_.util.encode);
+			} else {
+				return tokens.replace(/&amp;/g, &#x27;&amp;amp;&#x27;).replace(/&lt;/g, &#x27;&amp;lt;&#x27;).replace(/\u00a0/g, &#x27; &#x27;);
+			}
+		},
+
+		type: function (o) {
+			return Object.prototype.toString.call(o).match(/\[object (\w+)\]/)[1];
+		},
+
+		// Deep clone a language definition (e.g. to extend it)
+		clone: function (o) {
+			var type = _.util.type(o);
+
+			switch (type) {
+				case &#x27;Object&#x27;:
+					var clone = {};
+
+					for (var key in o) {
+						if (o.hasOwnProperty(key)) {
+							clone[key] = _.util.clone(o[key]);
+						}
+					}
+
+					return clone;
+
+				case &#x27;Array&#x27;:
+					return o.map(function(v) { return _.util.clone(v); });
+			}
+
+			return o;
+		}
+	},
+
+	languages: {
+		extend: function (id, redef) {
+			var lang = _.util.clone(_.languages[id]);
+
+			for (var key in redef) {
+				lang[key] = redef[key];
+			}
+
+			return lang;
+		},
+
+		/**
+		 * Insert a token before another token in a language literal
+		 * As this needs to recreate the object (we cannot actually insert before keys in object literals),
+		 * we cannot just provide an object, we need anobject and a key.
+		 * @param inside The key (or language id) of the parent
+		 * @param before The key to insert before. If not provided, the function appends instead.
+		 * @param insert Object with the key/value pairs to insert
+		 * @param root The object that contains `inside`. If equal to Prism.languages, it can be omitted.
+		 */
+		insertBefore: function (inside, before, insert, root) {
+			root = root || _.languages;
+			var grammar = root[inside];
+			
+			if (arguments.length == 2) {
+				insert = arguments[1];
+				
+				for (var newToken in insert) {
+					if (insert.hasOwnProperty(newToken)) {
+						grammar[newToken] = insert[newToken];
+					}
+				}
+				
+				return grammar;
+			}
+			
+			var ret = {};
+
+			for (var token in grammar) {
+
+				if (grammar.hasOwnProperty(token)) {
+
+					if (token == before) {
+
+						for (var newToken in insert) {
+
+							if (insert.hasOwnProperty(newToken)) {
+								ret[newToken] = insert[newToken];
+							}
+						}
+					}
+
+					ret[token] = grammar[token];
+				}
+			}
+			
+			// Update references in other language definitions
+			_.languages.DFS(_.languages, function(key, value) {
+				if (value === root[inside] &amp;&amp; key != inside) {
+					this[key] = ret;
+				}
+			});
+
+			return root[inside] = ret;
+		},
+
+		// Traverse a language definition with Depth First Search
+		DFS: function(o, callback, type) {
+			for (var i in o) {
+				if (o.hasOwnProperty(i)) {
+					callback.call(o, i, o[i], type || i);
+
+					if (_.util.type(o[i]) === &#x27;Object&#x27;) {
+						_.languages.DFS(o[i], callback);
+					}
+					else if (_.util.type(o[i]) === &#x27;Array&#x27;) {
+						_.languages.DFS(o[i], callback, i);
+					}
+				}
+			}
+		}
+	},
+
+	highlightAll: function(async, callback) {
+		var elements = document.querySelectorAll(&#x27;code[class*=&quot;language-&quot;], [class*=&quot;language-&quot;] code, code[class*=&quot;lang-&quot;], [class*=&quot;lang-&quot;] code&#x27;);
+
+		for (var i=0, element; element = elements[i++];) {
+			_.highlightElement(element, async === true, callback);
+		}
+	},
+
+	highlightElement: function(element, async, callback) {
+		// Find language
+		var language, grammar, parent = element;
+
+		while (parent &amp;&amp; !lang.test(parent.className)) {
+			parent = parent.parentNode;
+		}
+
+		if (parent) {
+			language = (parent.className.match(lang) || [,&#x27;&#x27;])[1];
+			grammar = _.languages[language];
+		}
+
+		if (!grammar) {
+			return;
+		}
+
+		// Set language on the element, if not present
+		element.className = element.className.replace(lang, &#x27;&#x27;).replace(/\s+/g, &#x27; &#x27;) + &#x27; language-&#x27; + language;
+
+		// Set language on the parent, for styling
+		parent = element.parentNode;
+
+		if (/pre/i.test(parent.nodeName)) {
+			parent.className = parent.className.replace(lang, &#x27;&#x27;).replace(/\s+/g, &#x27; &#x27;) + &#x27; language-&#x27; + language;
+		}
+
+		var code = element.textContent;
+
+		if(!code) {
+			return;
+		}
+
+		code = code.replace(/^(?:\r?\n|\r)/,&#x27;&#x27;);
+
+		var env = {
+			element: element,
+			language: language,
+			grammar: grammar,
+			code: code
+		};
+
+		_.hooks.run(&#x27;before-highlight&#x27;, env);
+
+		if (async &amp;&amp; self.Worker) {
+			var worker = new Worker(_.filename);
+
+			worker.onmessage = function(evt) {
+				env.highlightedCode = Token.stringify(JSON.parse(evt.data), language);
+
+				_.hooks.run(&#x27;before-insert&#x27;, env);
+
+				env.element.innerHTML = env.highlightedCode;
+
+				callback &amp;&amp; callback.call(env.element);
+				_.hooks.run(&#x27;after-highlight&#x27;, env);
+			};
+
+			worker.postMessage(JSON.stringify({
+				language: env.language,
+				code: env.code
+			}));
+		}
+		else {
+			env.highlightedCode = _.highlight(env.code, env.grammar, env.language);
+
+			_.hooks.run(&#x27;before-insert&#x27;, env);
+
+			env.element.innerHTML = env.highlightedCode;
+
+			callback &amp;&amp; callback.call(element);
+
+			_.hooks.run(&#x27;after-highlight&#x27;, env);
+		}
+	},
+
+	highlight: function (text, grammar, language) {
+		var tokens = _.tokenize(text, grammar);
+		return Token.stringify(_.util.encode(tokens), language);
+	},
+
+	tokenize: function(text, grammar, language) {
+		var Token = _.Token;
+
+		var strarr = [text];
+
+		var rest = grammar.rest;
+
+		if (rest) {
+			for (var token in rest) {
+				grammar[token] = rest[token];
+			}
+
+			delete grammar.rest;
+		}
+
+		tokenloop: for (var token in grammar) {
+			if(!grammar.hasOwnProperty(token) || !grammar[token]) {
+				continue;
+			}
+
+			var patterns = grammar[token];
+			patterns = (_.util.type(patterns) === &quot;Array&quot;) ? patterns : [patterns];
+
+			for (var j = 0; j &lt; patterns.length; ++j) {
+				var pattern = patterns[j],
+					inside = pattern.inside,
+					lookbehind = !!pattern.lookbehind,
+					lookbehindLength = 0,
+					alias = pattern.alias;
+
+				pattern = pattern.pattern || pattern;
+
+				for (var i=0; i&lt;strarr.length; i++) { // Don’t cache length as it changes during the loop
+
+					var str = strarr[i];
+
+					if (strarr.length &gt; text.length) {
+						// Something went terribly wrong, ABORT, ABORT!
+						break tokenloop;
+					}
+
+					if (str instanceof Token) {
+						continue;
+					}
+
+					pattern.lastIndex = 0;
+
+					var match = pattern.exec(str);
+
+					if (match) {
+						if(lookbehind) {
+							lookbehindLength = match[1].length;
+						}
+
+						var from = match.index - 1 + lookbehindLength,
+							match = match[0].slice(lookbehindLength),
+							len = match.length,
+							to = from + len,
+							before = str.slice(0, from + 1),
+							after = str.slice(to + 1);
+
+						var args = [i, 1];
+
+						if (before) {
+							args.push(before);
+						}
+
+						var wrapped = new Token(token, inside? _.tokenize(match, inside) : match, alias);
+
+						args.push(wrapped);
+
+						if (after) {
+							args.push(after);
+						}
+
+						Array.prototype.splice.apply(strarr, args);
+					}
+				}
+			}
+		}
+
+		return strarr;
+	},
+
+	hooks: {
+		all: {},
+
+		add: function (name, callback) {
+			var hooks = _.hooks.all;
+
+			hooks[name] = hooks[name] || [];
+
+			hooks[name].push(callback);
+		},
+
+		run: function (name, env) {
+			var callbacks = _.hooks.all[name];
+
+			if (!callbacks || !callbacks.length) {
+				return;
+			}
+
+			for (var i=0, callback; callback = callbacks[i++];) {
+				callback(env);
+			}
+		}
+	}
+};
+
+var Token = _.Token = function(type, content, alias) {
+	this.type = type;
+	this.content = content;
+	this.alias = alias;
+};
+
+Token.stringify = function(o, language, parent) {
+	if (typeof o == &#x27;string&#x27;) {
+		return o;
+	}
+
+	if (_.util.type(o) === &#x27;Array&#x27;) {
+		return o.map(function(element) {
+			return Token.stringify(element, language, o);
+		}).join(&#x27;&#x27;);
+	}
+
+	var env = {
+		type: o.type,
+		content: Token.stringify(o.content, language, parent),
+		tag: &#x27;span&#x27;,
+		classes: [&#x27;token&#x27;, o.type],
+		attributes: {},
+		language: language,
+		parent: parent
+	};
+
+	if (env.type == &#x27;comment&#x27;) {
+		env.attributes[&#x27;spellcheck&#x27;] = &#x27;true&#x27;;
+	}
+
+	if (o.alias) {
+		var aliases = _.util.type(o.alias) === &#x27;Array&#x27; ? o.alias : [o.alias];
+		Array.prototype.push.apply(env.classes, aliases);
+	}
+
+	_.hooks.run(&#x27;wrap&#x27;, env);
+
+	var attributes = &#x27;&#x27;;
+
+	for (var name in env.attributes) {
+		attributes += name + &#x27;=&quot;&#x27; + (env.attributes[name] || &#x27;&#x27;) + &#x27;&quot;&#x27;;
+	}
+
+	return &#x27;&lt;&#x27; + env.tag + &#x27; class=&quot;&#x27; + env.classes.join(&#x27; &#x27;) + &#x27;&quot; &#x27; + attributes + &#x27;&gt;&#x27; + env.content + &#x27;&lt;/&#x27; + env.tag + &#x27;&gt;&#x27;;
+
+};
+
+if (!self.document) {
+	if (!self.addEventListener) {
+		// in Node.js
+		return self.Prism;
+	}
+ 	// In worker
+	self.addEventListener(&#x27;message&#x27;, function(evt) {
+		var message = JSON.parse(evt.data),
+		    lang = message.language,
+		    code = message.code;
+
+		self.postMessage(JSON.stringify(_.util.encode(_.tokenize(code, _.languages[lang]))));
+		self.close();
+	}, false);
+
+	return self.Prism;
+}
+
+// Get current script and highlight
+var script = document.getElementsByTagName(&#x27;script&#x27;);
+
+script = script[script.length - 1];
+
+if (script) {
+	_.filename = script.src;
+
+	if (document.addEventListener &amp;&amp; !script.hasAttribute(&#x27;data-manual&#x27;)) {
+		document.addEventListener(&#x27;DOMContentLoaded&#x27;, _.highlightAll);
+	}
+}
+
+return self.Prism;
+
+})();
+
+if (typeof module !== &#x27;undefined&#x27; &amp;&amp; module.exports) {
+	module.exports = Prism;
+}
+
+
+/* **********************************************
+     Begin prism-markup.js
+********************************************** */
+
+Prism.languages.markup = {
+	&#x27;comment&#x27;: /&lt;!--[\w\W]*?--&gt;/,
+	&#x27;prolog&#x27;: /&lt;\?.+?\?&gt;/,
+	&#x27;doctype&#x27;: /&lt;!DOCTYPE.+?&gt;/,
+	&#x27;cdata&#x27;: /&lt;!\[CDATA\[[\w\W]*?]]&gt;/i,
+	&#x27;tag&#x27;: {
+		pattern: /&lt;\/?[\w:-]+\s*(?:\s+[\w:-]+(?:=(?:(&quot;|&#x27;)(\\?[\w\W])*?\1|[^\s&#x27;&quot;&gt;=]+))?\s*)*\/?&gt;/i,
+		inside: {
+			&#x27;tag&#x27;: {
+				pattern: /^&lt;\/?[\w:-]+/i,
+				inside: {
+					&#x27;punctuation&#x27;: /^&lt;\/?/,
+					&#x27;namespace&#x27;: /^[\w-]+?:/
+				}
+			},
+			&#x27;attr-value&#x27;: {
+				pattern: /=(?:(&#x27;|&quot;)[\w\W]*?(\1)|[^\s&gt;]+)/i,
+				inside: {
+					&#x27;punctuation&#x27;: /=|&gt;|&quot;/
+				}
+			},
+			&#x27;punctuation&#x27;: /\/?&gt;/,
+			&#x27;attr-name&#x27;: {
+				pattern: /[\w:-]+/,
+				inside: {
+					&#x27;namespace&#x27;: /^[\w-]+?:/
+				}
+			}
+
+		}
+	},
+	&#x27;entity&#x27;: /&amp;#?[\da-z]{1,8};/i
+};
+
+// Plugin to make entity title show the real entity, idea by Roman Komarov
+Prism.hooks.add(&#x27;wrap&#x27;, function(env) {
+
+	if (env.type === &#x27;entity&#x27;) {
+		env.attributes[&#x27;title&#x27;] = env.content.replace(/&amp;amp;/, &#x27;&amp;&#x27;);
+	}
+});
+
+
+/* **********************************************
+     Begin prism-css.js
+********************************************** */
+
+Prism.languages.css = {
+	&#x27;comment&#x27;: /\/\*[\w\W]*?\*\//,
+	&#x27;atrule&#x27;: {
+		pattern: /@[\w-]+?.*?(;|(?=\s*\{))/i,
+		inside: {
+			&#x27;punctuation&#x27;: /[;:]/
+		}
+	},
+	&#x27;url&#x27;: /url\((?:([&quot;&#x27;])(\\\n|\\?.)*?\1|.*?)\)/i,
+	&#x27;selector&#x27;: /[^\{\}\s][^\{\};]*(?=\s*\{)/,
+	&#x27;string&#x27;: /(&quot;|&#x27;)(\\\n|\\?.)*?\1/,
+	&#x27;property&#x27;: /(\b|\B)[\w-]+(?=\s*:)/i,
+	&#x27;important&#x27;: /\B!important\b/i,
+	&#x27;punctuation&#x27;: /[\{\};:]/,
+	&#x27;function&#x27;: /[-a-z0-9]+(?=\()/i
+};
+
+if (Prism.languages.markup) {
+	Prism.languages.insertBefore(&#x27;markup&#x27;, &#x27;tag&#x27;, {
+		&#x27;style&#x27;: {
+			pattern: /&lt;style[\w\W]*?&gt;[\w\W]*?&lt;\/style&gt;/i,
+			inside: {
+				&#x27;tag&#x27;: {
+					pattern: /&lt;style[\w\W]*?&gt;|&lt;\/style&gt;/i,
+					inside: Prism.languages.markup.tag.inside
+				},
+				rest: Prism.languages.css
+			},
+			alias: &#x27;language-css&#x27;
+		}
+	});
+	
+	Prism.languages.insertBefore(&#x27;inside&#x27;, &#x27;attr-value&#x27;, {
+		&#x27;style-attr&#x27;: {
+			pattern: /\s*style=(&quot;|&#x27;).*?\1/i,
+			inside: {
+				&#x27;attr-name&#x27;: {
+					pattern: /^\s*style/i,
+					inside: Prism.languages.markup.tag.inside
+				},
+				&#x27;punctuation&#x27;: /^\s*=\s*[&#x27;&quot;]|[&#x27;&quot;]\s*$/,
+				&#x27;attr-value&#x27;: {
+					pattern: /.+/i,
+					inside: Prism.languages.css
+				}
+			},
+			alias: &#x27;language-css&#x27;
+		}
+	}, Prism.languages.markup.tag);
+}
+
+/* **********************************************
+     Begin prism-clike.js
+********************************************** */
+
+Prism.languages.clike = {
+	&#x27;comment&#x27;: [
+		{
+			pattern: /(^|[^\\])\/\*[\w\W]*?\*\//,
+			lookbehind: true
+		},
+		{
+			pattern: /(^|[^\\:])\/\/.+/,
+			lookbehind: true
+		}
+	],
+	&#x27;string&#x27;: /(&quot;|&#x27;)(\\\n|\\?.)*?\1/,
+	&#x27;class-name&#x27;: {
+		pattern: /((?:(?:class|interface|extends|implements|trait|instanceof|new)\s+)|(?:catch\s+\())[a-z0-9_\.\\]+/i,
+		lookbehind: true,
+		inside: {
+			punctuation: /(\.|\\)/
+		}
+	},
+	&#x27;keyword&#x27;: /\b(if|else|while|do|for|return|in|instanceof|function|new|try|throw|catch|finally|null|break|continue)\b/,
+	&#x27;boolean&#x27;: /\b(true|false)\b/,
+	&#x27;function&#x27;: {
+		pattern: /[a-z0-9_]+\(/i,
+		inside: {
+			punctuation: /\(/
+		}
+	},
+	&#x27;number&#x27;: /\b-?(0x[\dA-Fa-f]+|\d*\.?\d+([Ee]-?\d+)?)\b/,
+	&#x27;operator&#x27;: /[-+]{1,2}|!|&lt;=?|&gt;=?|={1,3}|&amp;{1,2}|\|?\||\?|\*|\/|~|\^|%/,
+	&#x27;ignore&#x27;: /&amp;(lt|gt|amp);/i,
+	&#x27;punctuation&#x27;: /[{}[\];(),.:]/
+};
+
+
+/* **********************************************
+     Begin prism-javascript.js
+********************************************** */
+
+Prism.languages.javascript = Prism.languages.extend(&#x27;clike&#x27;, {
+	&#x27;keyword&#x27;: /\b(break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|false|finally|for|function|get|if|implements|import|in|instanceof|interface|let|new|null|package|private|protected|public|return|set|static|super|switch|this|throw|true|try|typeof|var|void|while|with|yield)\b/,
+	&#x27;number&#x27;: /\b-?(0x[\dA-Fa-f]+|\d*\.?\d+([Ee][+-]?\d+)?|NaN|-?Infinity)\b/,
+	&#x27;function&#x27;: /(?!\d)[a-z0-9_$]+(?=\()/i
+});
+
+Prism.languages.insertBefore(&#x27;javascript&#x27;, &#x27;keyword&#x27;, {
+	&#x27;regex&#x27;: {
+		pattern: /(^|[^/])\/(?!\/)(\[.+?]|\\.|[^/\r\n])+\/[gim]{0,3}(?=\s*($|[\r\n,.;})]))/,
+		lookbehind: true
+	}
+});
+
+if (Prism.languages.markup) {
+	Prism.languages.insertBefore(&#x27;markup&#x27;, &#x27;tag&#x27;, {
+		&#x27;script&#x27;: {
+			pattern: /&lt;script[\w\W]*?&gt;[\w\W]*?&lt;\/script&gt;/i,
+			inside: {
+				&#x27;tag&#x27;: {
+					pattern: /&lt;script[\w\W]*?&gt;|&lt;\/script&gt;/i,
+					inside: Prism.languages.markup.tag.inside
+				},
+				rest: Prism.languages.javascript
+			},
+			alias: &#x27;language-javascript&#x27;
+		}
+	});
+}
+
+
+/* **********************************************
+     Begin prism-file-highlight.js
+********************************************** */
+
+(function () {
+	if (!self.Prism || !self.document || !document.querySelector) {
+		return;
+	}
+
+	self.Prism.fileHighlight = function() {
+
+		var Extensions = {
+			&#x27;js&#x27;: &#x27;javascript&#x27;,
+			&#x27;html&#x27;: &#x27;markup&#x27;,
+			&#x27;svg&#x27;: &#x27;markup&#x27;,
+			&#x27;xml&#x27;: &#x27;markup&#x27;,
+			&#x27;py&#x27;: &#x27;python&#x27;,
+			&#x27;rb&#x27;: &#x27;ruby&#x27;,
+			&#x27;ps1&#x27;: &#x27;powershell&#x27;,
+			&#x27;psm1&#x27;: &#x27;powershell&#x27;
+		};
+
+		Array.prototype.slice.call(document.querySelectorAll(&#x27;pre[data-src]&#x27;)).forEach(function(pre) {
+			var src = pre.getAttribute(&#x27;data-src&#x27;);
+			var extension = (src.match(/\.(\w+)$/) || [,&#x27;&#x27;])[1];
+			var language = Extensions[extension] || extension;
+
+			var code = document.createElement(&#x27;code&#x27;);
+			code.className = &#x27;language-&#x27; + language;
+
+			pre.textContent = &#x27;&#x27;;
+
+			code.textContent = &#x27;Loading…&#x27;;
+
+			pre.appendChild(code);
+
+			var xhr = new XMLHttpRequest();
+
+			xhr.open(&#x27;GET&#x27;, src, true);
+
+			xhr.onreadystatechange = function() {
+				if (xhr.readyState == 4) {
+
+					if (xhr.status &lt; 400 &amp;&amp; xhr.responseText) {
+						code.textContent = xhr.responseText;
+
+						Prism.highlightElement(code);
+					}
+					else if (xhr.status &gt;= 400) {
+						code.textContent = &#x27;✖ Error &#x27; + xhr.status + &#x27; while fetching file: &#x27; + xhr.statusText;
+					}
+					else {
+						code.textContent = &#x27;✖ Error: File does not exist or is empty&#x27;;
+					}
+				}
+			};
+
+			xhr.send(null);
+		});
+
+	};
+
+	self.Prism.fileHighlight();
+
+})();
+</code></pre></div><div class="col-xs-6" data-reactid=".lmns13nu9s.1.1"><h2 data-reactid=".lmns13nu9s.1.1.0"><span data-reactid=".lmns13nu9s.1.1.0.0">Usage of PrismCode</span><br data-reactid=".lmns13nu9s.1.1.0.1"><small data-reactid=".lmns13nu9s.1.1.0.2">by creating a component SelfUpdatedCode</small></h2><pre data-reactid=".lmns13nu9s.1.1.1">
+<code class="language-javascript" data-reactid=".lmns13nu9s.1.1.1.0">import {default as React, PropTypes} from &quot;react&quot;;
+import {default as PrismCode} from &quot;react-prism/PrismCode&quot;;
+
+const CODE_LIST = [
+  {
+    className: &quot;language-javascript&quot;,
+    codeBlock: require(&quot;raw-loader!prismjs/prism.js&quot;),
+  },
+  {
+    className: &quot;language-css&quot;,
+    codeBlock: require(&quot;raw-loader!../../texts/prism.text&quot;),
+  },
+  {
+    className: &quot;language-markup&quot;,
+    codeBlock: require(&quot;raw-loader!../../texts/markup.text&quot;),
+  }
+];
+
+const CODE_LIST_LENGTH = CODE_LIST.length;
+
+class SelfUpdatedCode extends React.Component {
+
+  static get propTypes () {
+    return {
+      intervalMillis: React.PropTypes.number.isRequired,
+    };
+  }
+
+  constructor (...args) {
+    super(...args);
+    this.state = {
+      _index: 0,
+      _intervalId: null,
+    };
+  }
+
+  componentDidMount () {
+    this._setInterval();
+  }
+
+  componentWillReceiveProps (nextProps) {
+    if (nextProps.intervalMillis !== this.props.intervalMillis) {
+      this._clearInterval();
+      this.setState({ _intervalId: null });
+    }
+  }
+
+  componentDidUpdate () {
+    this._setInterval();
+  }
+
+  componentWillUnmount () {
+    this._clearInterval();
+  }
+
+  _setInterval () {
+    if (this.state._intervalId !== null) {
+      return;
+    }
+    const _intervalId = setInterval(() =&gt; {
+      this.setState({_index: (this.state._index + 1) % CODE_LIST_LENGTH});
+    }, this.props.intervalMillis);
+    this.setState({ _intervalId });
+  }
+
+  _clearInterval () {
+    clearInterval(this.state._intervalId);
+  }
+
+  render () {
+    const {props, state} = this;
+    const {className, codeBlock} = CODE_LIST[state._index];
+    return (
+      &lt;PrismCode className={className}&gt;{codeBlock}&lt;/PrismCode&gt;
+    );
+  }
+}
+
+export default SelfUpdatedCode;
+</code></pre></div></div></div></div><script type="text/javascript" src="assets/3bf519acf6199ac76f22/client.js"></script></body></html>
